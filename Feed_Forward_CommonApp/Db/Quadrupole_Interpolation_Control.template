@@ -1,0 +1,161 @@
+# $File: //ASP/Dev/SBS/4_Controls/4_4_Equipment_Control/4_4_8_Insertion_Device_Control/sw/Feed_Forward/Feed_Forward_CommonApp/Db/Quadrupole_Interpolation_Control.template $
+# $Revision: 1.1.1.1 $
+# $DateTime: 2012/07/06 11:34:12 $
+# Last checked in by: $Author: saa $
+#
+# Description.
+# This template instantiates the required number of aSub records using the
+# Interpolation_Table_Process in order to calculate the delata current change
+# for all the quadrupole magnets in the storage ring for either a 1D or 2D
+# interpolation.
+#
+# Formal template parameters are:
+# NAME  - specifies base name, e.g. SR14FF01
+# FLNK  - Final forward link - can be null.
+#
+# Note: This template expects a PV $(NAME):INPUT_VALIDATION to exist.
+# Is TRUE (i.e. 1) when input okay, otherwise is FALSE (i.e. 0)
+# Validation of Insertion Device gap, taper, phase etc. is device specific,
+# so not included in this template.
+#
+#
+# Copyright (c) 2012  Australian Synchrotron
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# Licence as published by the Free Software Foundation; either
+# version 2.1 of the Licence, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public Licence for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# Licence along with this library; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Contact details:
+# andrew.starritt@synchrotron.org.au
+# 800 Blackburn Road, Clayton, Victoria 3168, Australia.
+#
+
+# This record emabled/disables the feed forward processing.
+# And tigger the prolog record
+#
+record (bo, "$(NAME):FEED_FWD_ENABLE_CMD") {
+
+#!! archive ! redhat ! CR01ARC01 ! idc ! monitor ! 1.0
+
+    field (DESC, "Feed forward enable")
+    field (SCAN, "Passive")
+    field (PINI, "YES")
+
+    # Conversions and alarm severities
+    #
+    field (ZNAM, "Disabled")
+    field (ZSV,  "NO_ALARM")
+    field (ONAM, "Enabled")
+    field (OSV,  "NO_ALARM")
+
+    field (OMSL, "supervisory")
+    field (VAL,  "1")                    # default is Enabled
+
+    field (FLNK, "$(NAME):INTERPOLATION_PROLOGUE")
+}
+
+# This record is the start point triggered from the 'outside' which initiates
+# the feed forward processing. It filters the forward link so that processing
+# only occurs when the enable command PV set true and the input is valid.
+#
+# It is expected that the FLNK is received from the dead band processing records.
+# Validation and deadbanding is Insertion Device specific, so not included in
+# this template.
+#
+record (calcout, "$(NAME):INTERPOLATION_PROLOGUE") {
+    field (DESC, "Feed forward stim")
+    field (SCAN, "Passive")
+    field (INPA, "$(NAME):FEED_FWD_ENABLE_CMD")
+    field (INPB, "$(NAME):INPUT_VALIDATION_CALC")
+    field (CALC, "(A==1)&&(B==1) ? 1 : 0")
+    field (OOPT, "When Non-zero")
+    field (DOPT, "Use CALC")             # any value will do when writing to PROC field
+    field (OUT,  "$(NAME):FEED_FWD_FANOUT.PROC PP")
+}
+
+# Using a dfanout because fanout has only 6 links.
+#
+record (dfanout, "$(NAME):FEED_FWD_FANOUT") {
+    field (DESC, "Trigger feed forward records A")
+    field (SCAN, "Passive")
+    field (SELM, "All")
+    field (DOL,  "1")                    # any value will do when writing to PROC field
+    field (OMSL, "closed_loop")
+    field (OUTA, "$(NAME):INTERPOLATION_CALC_01.PROC")
+    field (OUTB, "$(NAME):INTERPOLATION_CALC_02.PROC")
+    field (OUTC, "$(NAME):INTERPOLATION_CALC_03.PROC")
+    field (OUTD, "$(NAME):INTERPOLATION_CALC_04.PROC")
+    field (OUTE, "$(NAME):INTERPOLATION_CALC_05.PROC")
+    field (OUTF, "$(NAME):INTERPOLATION_CALC_06.PROC")
+    field (OUTG, "$(NAME):INTERPOLATION_CALC_07.PROC")
+    field (FLNK, "$(NAME):PROCESS_COUNTER")
+}
+
+# Essentially dianostic.
+#
+record (calc, "$(NAME):PROCESS_COUNTER") {
+    field (DESC, "FF process count")
+    field (SCAN, "Passive")
+    field (INPA, "$(NAME):PROCESS_COUNTER")
+    field (CALC, "(A+1)%100")
+    field (HOPR, "100")
+    field (FLNK, "$(FLNK)")
+}
+
+
+# These records define the coordinate points for the interpolation
+# tables in each dimension, e.g. for gaps (mm):
+#
+#   1   4   41.00  12.00  10.00  6.00
+#
+# The initial 1 and 4 indicate the waveform holds a 1 dimensional
+# array and that the 1st (only) dimension 4 long respectively.
+#
+# The same coordinate sets are used for all the interpolations for a
+# this insertion device. All the  $(NAME):SRssQPSxx_INTERPOLATION_TABLE
+# waveform records must be consistant with the coordinate points.
+#
+# We allow upto 20 x 40 x 40 points in each respective dimension, more than
+# double existing requirements; and this means we can a avoid a lot of
+# unnecessary NELM macro parameters.
+#
+# It is expected that these records will be auto-saved.
+#
+record (waveform, "$(NAME):INP1_COORDINATE_SET") {
+    field (DESC, "Coordinate set 1")
+    field (SCAN, "Passive")
+    field (PINI, "YES")
+    field (FTVL, "DOUBLE")
+    field (NELM, "22")
+    field (PREC, "2")
+}
+
+record (waveform, "$(NAME):INP2_COORDINATE_SET") {
+    field (DESC, "Coordinate set 2")
+    field (SCAN, "Passive")
+    field (PINI, "YES")
+    field (FTVL, "DOUBLE")
+    field (NELM, "42")
+    field (PREC, "2")
+}
+
+record (waveform, "$(NAME):INP3_COORDINATE_SET") {
+    field (DESC, "Coordinate set 3")
+    field (SCAN, "Passive")
+    field (PINI, "YES")
+    field (FTVL, "DOUBLE")
+    field (NELM, "42")
+    field (PREC, "2")
+}
+
+# end

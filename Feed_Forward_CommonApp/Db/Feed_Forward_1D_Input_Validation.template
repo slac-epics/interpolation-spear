@@ -1,0 +1,84 @@
+# $File: //ASP/Dev/SBS/4_Controls/4_4_Equipment_Control/4_4_8_Insertion_Device_Control/sw/Feed_Forward/Feed_Forward_CommonApp/Db/Feed_Forward_1D_Input_Validation.template $
+# $Revision: 1.1.1.1 $
+# $DateTime: 2012/07/06 11:34:12 $
+# Last checked in by: $Author: saa $
+#
+# Description.
+# Monitors the nominated input and determines if it is both valid and
+# in bounds. If it is, it then triggers the interpolation calculation.
+#
+# Formal template parameters are:
+# NAME  - specifies feed forward base name, e.g. SR12FF01
+# INP   - specifies the PV supplying then item, e.g. SR12ID01:GAP_MONITOR
+# MIN   - minimum valid value with some tolerance, e.g. 10.5
+# MAX   - maximum value value with some tolerance, e.g. 205.5
+#
+# Note: This template also used by the local corrector coil functionality.
+#
+#
+# Copyright (c) 2012  Australian Synchrotron
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# Licence as published by the Free Software Foundation; either
+# version 2.1 of the Licence, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public Licence for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# Licence along with this library; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Contact details:
+# andrew.starritt@synchrotron.org.au
+# 800 Blackburn Road, Clayton, Victoria 3168, Australia.
+#
+
+# This record validates the monitored gap, to ensure we do not attempt
+# to try to process an invalid gap value.
+# Is TRUE (i.e. 1) when input okay, otherwise is FALSE (i.e. 0)
+#
+record (calcout, "$(NAME):INPUT_VALIDATION_CALC") {
+    field (DESC, "Validation")
+    field (SCAN, "Passive")
+    field (PINI, "YES")
+    field (INPA, "$(INP).SEVR CP")
+    field (INPB, "$(INP) CP")
+    field (INPC, "$(MIN)")
+    field (INPD, "$(MAX)")
+    field (CALC, "(A#3)&&(B>=C)&&(B<=D)?1:0")
+    field (OOPT, "When Non-zero")
+    field (DOPT, "Use CALC")             # any value will do when writing to PROC field
+    field (OUT,  "$(NAME):INTERPOLATION_PROLOGUE.PROC")
+
+    # Essentially boolean
+    field (PREC, "0")
+    field (LOPR, "0")
+    field (HOPR, "1")
+    field (ADEL, "0.5")
+    field (MDEL, "0.5")
+    field (FLNK, "$(NAME):INPUT_VALIDATION_STATUS")
+}
+
+# Provides status PV suitable for gui clients.
+#
+record (bi, "$(NAME):INPUT_VALIDATION_STATUS") {
+
+#!! archive ! redhat ! CR01ARC01 ! idc ! monitor ! 1.0
+
+    field (DESC, "Input Status")
+    field (SCAN, "Passive")
+    field (INP,  "$(NAME):INPUT_VALIDATION_CALC")
+
+    # Conversions and alarm severities
+    #
+    field (ZNAM, "Invalid")
+    field (ZSV,  "MINOR")
+    field (ONAM, "Valid")
+    field (OSV,  "NO_ALARM")
+}
+
+# end

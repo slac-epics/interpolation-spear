@@ -1,0 +1,71 @@
+# $File: //ASP/Dev/SBS/4_Controls/4_4_Equipment_Control/4_4_8_Insertion_Device_Control/sw/Feed_Forward/Feed_Forward_Sector_05App/Db/Feed_Forward_Sector_05.substitutions $
+# $Revision: 1.1.1.1 $
+# $DateTime: 2012/06/07 10:30:50 $
+# Last checked in by: $Author: saa $
+#
+# Description.
+# This substitution file instantiates the Quadrupole_Interpolation template
+# for the Sector 05 Micro Spectroscopy IVU insertion device.
+#
+# Notes:
+# No leading zero on FILE parameter otherwise it is interpreted as octal.
+#
+#
+# Copyright (c) 2007  Australian Synchrotron
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# Licence as published by the Free Software Foundation; either
+# version 2.1 of the Licence, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public Licence for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# Licence along with this library; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Contact details:
+# andrew.starritt@synchrotron.vic.gov.au
+# 800 Blackburn Road, Clayton, Victoria 3168, Australia.
+#
+
+# Overall control and coordination.
+#
+file db/Quadrupole_Interpolation_Control.template {
+   pattern { NAME,        FLNK  }
+           { "SR05FF01",  ""    }
+}
+
+# Monitors and validates input
+#
+file db/Feed_Forward_1D_Input_Validation.template {
+   pattern { NAME,        INP,                     MIN,    MAX    }
+           { "SR05FF01",  "SR05ID01:GAP_MONITOR",  "5.5",  "40.5" }
+}
+
+# Creates the interpolation calculation (aSub) records
+#
+file db/Quadrupole_Interpolation_Calculations.template {
+   pattern { NAME,        DIMS,  SIZE,  INP1,                    INP2,  INP3  }
+           { "SR05FF01",  "1",   "22",  "SR05ID01:GAP_MONITOR",  "0",   "0"   }
+}
+
+# Create a feed forward interpolation table (waveform) record for each
+# of the 84 qadrupole magnets.
+#
+file db/Quadrupole_Interpolation_Tables.template {
+   pattern { NAME,        DIMS,  SIZE   }
+           { "SR05FF01",  "1",   "22"   }
+}
+
+# Allows trim currents to be zero-ised and FF disabled.
+#
+file db/Quadrupole_Zero_Trim_Current.template {
+   pattern { NAME       }
+           { "SR05FF01" }
+}
+
+# end

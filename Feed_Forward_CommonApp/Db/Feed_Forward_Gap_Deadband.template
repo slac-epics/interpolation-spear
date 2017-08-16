@@ -1,0 +1,100 @@
+# $File: //ASP/Dev/SBS/4_Controls/4_4_Equipment_Control/4_4_8_Insertion_Device_Control/sw/Feed_Forward/Feed_Forward_CommonApp/Db/Feed_Forward_Gap_Deadband.template $
+# $Revision: 1.1.1.1 $
+# $DateTime: 2008/03/07 14:17:01 $
+# Last checked in by: $Author: saa $
+#
+# Description.
+# This template file provides dead banding and associated processing when the
+# Insertion Device local corrections or feed forward is only dependent on the
+# vertical gap.
+#
+#
+# Formal template parameters are:
+# NAME  - specifies feed forward base name, e.g. SR12FF01
+# GAP   - specifies the gap monitoring PV, e.g. SR12ID01:GAP_MONITOR
+# MIN   - minimum valid value with some tolerance, e.g. 10.5
+# MAX   - maximum value value with some tolerance, e.g. 205.5
+# DEAD  - dead band value, e.g. 0.001
+# DLNK  - DLNK value (can be null)
+#
+#
+# Copyright (c) 2007  Australian Synchrotron
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# Licence as published by the Free Software Foundation; either
+# version 2.1 of the Licence, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public Licence for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# Licence along with this library; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Contact details:
+# andrew.starritt@synchrotron.vic.gov.au
+# 800 Blackburn Road, Clayton, Victoria 3168, Australia.
+#
+
+# Note:
+# This record is expected to be FLNKed from the PV $(GAP)
+#
+# This record validates the monitored gap, to ensure we do not attempt
+# to try to process an invalid gap value.
+# Is TRUE (i.e. 1) when input okay, otherwise is FALSE (i.e. 0)
+#
+record (calcout, "$(NAME):INPUT_VALIDATION") {
+    field (DESC, "Gap validation")
+    field (SCAN, "Passive")
+    field (INPA, "$(GAP).SEVR")
+    field (INPB, "$(GAP)")
+    field (INPC, "$(MIN)")
+    field (INPD, "$(MAX)")
+    field (CALC, "(A#3)&&(B>=C)&&(B<=D)?1:0")
+    field (OOPT, "When Non-zero")
+    field (DOPT, "Use CALC")             # any value will do when writing to PROC field
+    field (OUT,  "$(NAME):GAP_DEAD_BAND.PROC")
+    field (PREC, "0")
+    field (LOPR, "0")
+    field (HOPR, "1")
+    field (FLNK, "$(NAME):INPUT_VALIDATION_STATUS")
+}
+
+record (bi, "$(NAME):INPUT_VALIDATION_STATUS") {
+
+#!! archive ! redhat ! CR01ARC01 ! idc ! monitor ! 1.0
+
+    field (DESC, "Input Status")
+    field (SCAN, "Passive")
+    field (INP,  "$(NAME):INPUT_VALIDATION")
+
+    # Conversions and alarm severities
+    #
+    field (ZNAM, "Invalid")
+    field (ZSV,  "MINOR")
+    field (ONAM, "Valid")
+    field (OSV,  "NO_ALARM")
+}
+
+# Dead band record. This filters the monitored vertical gap to avoid
+# unnecessary feed forward processing and subsequent magnet corrections.
+#
+record (filter, "$(NAME):GAP_DEAD_BAND") {
+    field (DESC, "Gap dead band filter")
+    field (SCAN, "Passive")
+    field (PREC, "3")
+    field (EGU,  "mm")
+    field (ADEL, "0.001")
+    field (MDEL, "0.001")
+    field (LOPR, "$(MIN)")
+    field (HOPR, "$(MAX)")
+    field (FLTR, "Dead Band")
+    field (INPX, "$(GAP)")
+    field (INPD, "$(DEAD)")
+    field (DLNK, "$(DLNK)")
+}
+
+# end

@@ -1,0 +1,21 @@
+
+NOTES for dynamic interpolation
+
+The basic utility is located in Dynamic_InterpolationSup. It comprises
+the aSub record support code and dbd file. There are some reasonable comments
+in Dynamic_InterpolationSup/dynamic_interpolation_subroutines.c
+
+Some examples of its use are found in:
+Feed_Forward_CommonApp
+Feed_Forward_Sector_05App
+Feed_Forward_Sector_14App
+
+Sector 5 is a 1D interpolation based on the ID gap.
+Sector 14 is a 3D interpolation based on  phase-mode, phase and gap.
+
+Feed_Forward_CommonApp/Db/Quadrupole_Interpolation_Calculations.template
+contains the actual aSub records used to perform the interpolation.
+
+Each aSub record can calculate 12 trim currents. The breaks point
+coordinated are the same for all 12 interpolations.
+

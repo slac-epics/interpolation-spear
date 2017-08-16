@@ -1,0 +1,74 @@
+# $File: //ASP/Dev/SBS/4_Controls/4_4_Equipment_Control/4_4_8_Insertion_Device_Control/sw/Feed_Forward/Feed_Forward_Sector_14App/Db/Feed_Forward_Sector_14.substitutions $
+# $Revision: 1.1.1.1 $
+# $DateTime: 2012/06/07 10:30:50 $
+# Last checked in by: $Author: saa $
+#
+# Description.
+# This substitution file instantiates the Quadrupole_Interpolation template
+# for the Sector 14 Soft X-Ray Apple II EPU insertion device.
+#
+# Note: The INP1, INP2 and INP3 PVs must all (indirectly) FLNK to the
+#       SR14FF01:FEED_FWD_01 record.
+#
+#
+# Copyright (c) 2007  Australian Synchrotron
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# Licence as published by the Free Software Foundation; either
+# version 2.1 of the Licence, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public Licence for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# Licence along with this library; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Contact details:
+# andrew.starritt@synchrotron.vic.gov.au
+# 800 Blackburn Road, Clayton, Victoria 3168, Australia.
+#
+
+# Overall control and coordination.
+#
+file db/Quadrupole_Interpolation_Control.template {
+   pattern { NAME,        FLNK  }
+           { "SR14FF01",  ""    }
+}
+
+file db/Feed_Forward_3D_Input_Validation.template {
+   pattern { NAME,        INP1,                                MIN1,      MAX1,
+                          INP2,                                MIN2,      MAX2 
+                          INP3,                                MIN3,      MAX3     }
+           { "SR14FF01",  "SR14ID01MCS01:PHASE_MODE_MONITOR",  "0",       "4",
+                          "SR14ID01:GAP_MONITOR",              "15.5",    "110.5",
+                          "SR14ID01:PHASE_MONITOR",            "-40.5",   "+40.5"  }
+}
+
+# Creates the interpolation calculation (aSub) records
+#
+file db/Quadrupole_Interpolation_Calculations.template {
+   pattern { NAME,        DIMS,  SIZE,    INP1,                                INP2,                    INP3                       }
+           { "SR14FF01",  "3",   "3202",  "SR14ID01MCS01:PHASE_MODE_MONITOR",  "SR14ID01:GAP_MONITOR",  "SR14ID01:PHASE_MONITOR"   }
+}
+
+# Create a feed forward interpolation table (waveform) record for each
+# of the 84 qadrupole magnets.
+#
+file db/Quadrupole_Interpolation_Tables.template {
+   pattern { NAME,        DIMS,  SIZE    }
+           { "SR14FF01",  "3",   "3202"  }
+}
+
+# Allows trim currents to be zero-ised and FF disabled.
+#
+file db/Quadrupole_Zero_Trim_Current.template {
+   pattern { NAME       }
+           { "SR14FF01" }
+}
+
+
+# end

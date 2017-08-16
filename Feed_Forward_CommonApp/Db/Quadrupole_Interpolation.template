@@ -1,0 +1,686 @@
+# $File: //ASP/Dev/SBS/4_Controls/4_4_Equipment_Control/4_4_8_Insertion_Device_Control/sw/Feed_Forward/Feed_Forward_CommonApp/Db/Quadrupole_Interpolation.template $
+# $Revision: 1.1.1.1 $
+# $DateTime: 2010/07/23 16:13:42 $
+# Last checked in by: $Author: saa $
+#
+# Description.
+# This template instantiates the required number of genSub records using the
+# Interpolation_Table_Process in order to calculate the delata current change
+# for all the quadrupole magnets in the storage ring for either a 1D or 2D
+# interpolation.
+#
+# Formal template parameters are:
+# NAME  - specifies base name, e.g. SR14ID01
+# DIMS  - specifies the number of dimensions, i.e. 1, 2 or 3.
+#         Must be a constant, as opposed to a database link.
+# INP1  - first  dimension control PV variable
+# INP2  - second dimension control PV variable, or for 1-D interpolation use constant, e.g. 0
+# INP3  - third dimension control PV variable, or for 1-D/2-D interpolation use constant, e.g. 0
+# FILE  - specifies the intepolation table file numbers for SRxxQPS01 through SRxxQPS06
+#         adjustments, e.g 10, which implies 101 for SRxxQPS001, 102 for SRxxQPS02 etc.
+#         Must be a constant, as opposed to a database link.
+# FLNK  - Final forward link - can be null.
+#
+#
+# Note: This template expects a PV $(NAME):INPUT_VALIDATION to exist.
+# Is TRUE (i.e. 1) when input okay, otherwise is FALSE (i.e. 0)
+# Validation of Insertion Device gap, taper, phsse etc. is device specific,
+# so not included in this template.
+#
+#
+# Copyright (c) 2007  Australian Synchrotron
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# Licence as published by the Free Software Foundation; either
+# version 2.1 of the Licence, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public Licence for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# Licence along with this library; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Contact details:
+# andrew.starritt@synchrotron.org.au
+# 800 Blackburn Road, Clayton, Victoria 3168, Australia.
+#
+
+# This record emabled/disables the feed forward processing.
+#
+record (bo, "$(NAME):FEED_FWD_ENABLE_CMD") {
+
+#!! archive ! redhat ! CR01ARC01 ! idc ! monitor ! 1.0
+
+    field (DESC, "Feed forward enable")
+    field (SCAN, "Passive")
+    field (PINI, "YES")
+
+    # Conversions and alarm severities
+    #
+    field (ZNAM, "Disabled")
+    field (ZSV,  "NO_ALARM")
+    field (ONAM, "Enabled")
+    field (OSV,  "NO_ALARM")
+
+    field (OMSL, "supervisory")
+    field (VAL,  "1")                    # default is Enabled
+
+    field (FLNK, "$(NAME):FEED_FWD_RESET_CALC")
+}
+
+# This record sets the reset record true if we WERE disabled and are NOW enabled.
+#
+record (calcout, "$(NAME):FEED_FWD_RESET_CALC") {
+    field (DESC, "Conditionally sets flag")
+    field (SCAN, "Passive")
+    field (VAL,  "1")                    # default is Enabled
+    field (INPA, "$(NAME):FEED_FWD_ENABLE_CMD")
+    field (CALC, "A")
+    field (OCAL, "1")
+    field (OOPT, "Transition To Non-zero")
+    field (DOPT, "Use OCAL")
+    field (OUT,  "$(NAME):FEED_FWD_RESET")
+    field (FLNK, "$(NAME):FEED_FWD_PROLOGUE")
+}
+
+# This record is the start point triggered from the 'outside' which initiates
+# the feed forward processing. It filters the forward link so that processing
+# only occurs when the enable command PV set true and the input is valid.
+#
+# It is expected that the FLNK is received from the dead band processing records.
+# Validation and deadbanding is Insertion Device specific, so not included in
+# this template.
+#
+record (calcout, "$(NAME):FEED_FWD_PROLOGUE") {
+    field (DESC, "Feed forward stim")
+    field (SCAN, "Passive")
+    field (INPA, "$(NAME):FEED_FWD_ENABLE_CMD")
+    field (INPB, "$(NAME):INPUT_VALIDATION")
+    field (CALC, "A*B")
+    field (OOPT, "When Non-zero")
+    field (DOPT, "Use CALC")             # any value will do when writing to PROC field
+    field (OUT,  "$(NAME):FEED_FWD_01.PROC")
+}
+
+# This record set true when a re-enabled feed forward is processed
+# for the first time, otherwise it is False.
+#
+record (longout, "$(NAME):FEED_FWD_RESET") {
+    field (DESC, "Feed forward re-enabled")
+    field (SCAN, "Passive")
+    field (PINI, "YES")
+    field (VAL,  "0")
+    field (DRVL, "0")
+    field (DRVH, "1")
+}
+
+# Six records - daisy chained together. The genSub record and specifically
+# the underlying interpolation code limit the number of outputs to 20 values.
+# Thus, for 84 outputs we need at least 5 records. By using 6 records we can
+# achieve a certain amount of symmetry, which eased the template creation,
+# and may help with maintenance.
+#
+record (genSub, "$(NAME):FEED_FWD_01") {
+    field (SCAN, "Passive")
+    field (DESC, "1 of 6")
+    field (FLNK, "$(NAME):FEED_FWD_02")
+
+    field (INAM, "Interpolation_Table_Init")
+    field (SNAM, "Interpolation_Table_Process")
+
+    # Table file number
+    #
+    field (INPA, "$(FILE)1")
+    field (FTA,  "LONG")
+
+    # Number of dimensions
+    #
+    field (INPB, "$(DIMS)")
+    field (FTB,  "LONG")
+
+    # Number of values interpolated
+    #
+    field (INPC, "14")
+    field (FTC,  "LONG")
+
+    # Mode - absolute
+    #
+    field (INPD, "1")
+    field (FTD,  "LONG")
+
+    # Reset indicator
+    #
+    field (INPE, "$(NAME):FEED_FWD_RESET")
+    field (FTE,  "LONG")
+
+    # Input coordinates
+    #
+    field (INPI, "$(INP1)")
+    field (FTI,  "DOUBLE")
+
+    field (INPJ, "$(INP2)")
+    field (FTJ,  "DOUBLE")
+
+    field (INPK, "$(INP3)")
+    field (FTK,  "DOUBLE")
+
+    # Outputs
+    # PP mode forces the record to process as it is on same IOC.
+    # This mitigates need for an FLNK to each output.
+    #
+    field (OUTA, "$(NAME):SR01QPS01_TRIM_CURRENT_SP PP")
+    field (FTVA, "DOUBLE")
+
+    field (OUTB, "$(NAME):SR02QPS01_TRIM_CURRENT_SP PP")
+    field (FTVB, "DOUBLE")
+
+    field (OUTC, "$(NAME):SR03QPS01_TRIM_CURRENT_SP PP")
+    field (FTVC, "DOUBLE")
+
+    field (OUTD, "$(NAME):SR04QPS01_TRIM_CURRENT_SP PP")
+    field (FTVD, "DOUBLE")
+
+    field (OUTE, "$(NAME):SR05QPS01_TRIM_CURRENT_SP PP")
+    field (FTVE, "DOUBLE")
+
+    field (OUTF, "$(NAME):SR06QPS01_TRIM_CURRENT_SP PP")
+    field (FTVF, "DOUBLE")
+
+    field (OUTG, "$(NAME):SR07QPS01_TRIM_CURRENT_SP PP")
+    field (FTVG, "DOUBLE")
+
+    field (OUTH, "$(NAME):SR08QPS01_TRIM_CURRENT_SP PP")
+    field (FTVH, "DOUBLE")
+
+    field (OUTI, "$(NAME):SR09QPS01_TRIM_CURRENT_SP PP")
+    field (FTVI, "DOUBLE")
+
+    field (OUTJ, "$(NAME):SR10QPS01_TRIM_CURRENT_SP PP")
+    field (FTVJ, "DOUBLE")
+
+    field (OUTK, "$(NAME):SR11QPS01_TRIM_CURRENT_SP PP")
+    field (FTVK, "DOUBLE")
+
+    field (OUTL, "$(NAME):SR12QPS01_TRIM_CURRENT_SP PP")
+    field (FTVL, "DOUBLE")
+
+    field (OUTM, "$(NAME):SR13QPS01_TRIM_CURRENT_SP PP")
+    field (FTVM, "DOUBLE")
+
+    field (OUTN, "$(NAME):SR14QPS01_TRIM_CURRENT_SP PP")
+    field (FTVN, "DOUBLE")
+}
+
+record (genSub, "$(NAME):FEED_FWD_02") {
+    field (SCAN, "Passive")
+    field (DESC, "2 of 6")
+    field (FLNK, "$(NAME):FEED_FWD_03")
+
+    field (INAM, "Interpolation_Table_Init")
+    field (SNAM, "Interpolation_Table_Process")
+
+    # Table file number
+    #
+    field (INPA, "$(FILE)2")
+    field (FTA,  "LONG")
+
+    # Number of dimensions
+    #
+    field (INPB, "$(DIMS)")
+    field (FTB,  "LONG")
+
+    # Number of values interpolated
+    #
+    field (INPC, "14")
+    field (FTC,  "LONG")
+
+    # Mode - absolute
+    #
+    field (INPD, "1")
+    field (FTD,  "LONG")
+
+    # Reset indicator
+    #
+    field (INPE, "$(NAME):FEED_FWD_RESET")
+    field (FTE,  "LONG")
+
+    # Input coordinates
+    #
+    field (INPI, "$(INP1)")
+    field (FTI,  "DOUBLE")
+
+    field (INPJ, "$(INP2)")
+    field (FTJ,  "DOUBLE")
+
+    field (INPK, "$(INP3)")
+    field (FTK,  "DOUBLE")
+
+    # Outputs
+    # PP mode forces the record to process as it is on same IOC.
+    # This mitigates need for an FLNK to each output.
+    #
+    field (OUTA, "$(NAME):SR01QPS02_TRIM_CURRENT_SP PP")
+    field (FTVA, "DOUBLE")
+
+    field (OUTB, "$(NAME):SR02QPS02_TRIM_CURRENT_SP PP")
+    field (FTVB, "DOUBLE")
+
+    field (OUTC, "$(NAME):SR03QPS02_TRIM_CURRENT_SP PP")
+    field (FTVC, "DOUBLE")
+
+    field (OUTD, "$(NAME):SR04QPS02_TRIM_CURRENT_SP PP")
+    field (FTVD, "DOUBLE")
+
+    field (OUTE, "$(NAME):SR05QPS02_TRIM_CURRENT_SP PP")
+    field (FTVE, "DOUBLE")
+
+    field (OUTF, "$(NAME):SR06QPS02_TRIM_CURRENT_SP PP")
+    field (FTVF, "DOUBLE")
+
+    field (OUTG, "$(NAME):SR07QPS02_TRIM_CURRENT_SP PP")
+    field (FTVG, "DOUBLE")
+
+    field (OUTH, "$(NAME):SR08QPS02_TRIM_CURRENT_SP PP")
+    field (FTVH, "DOUBLE")
+
+    field (OUTI, "$(NAME):SR09QPS02_TRIM_CURRENT_SP PP")
+    field (FTVI, "DOUBLE")
+
+    field (OUTJ, "$(NAME):SR10QPS02_TRIM_CURRENT_SP PP")
+    field (FTVJ, "DOUBLE")
+
+    field (OUTK, "$(NAME):SR11QPS02_TRIM_CURRENT_SP PP")
+    field (FTVK, "DOUBLE")
+
+    field (OUTL, "$(NAME):SR12QPS02_TRIM_CURRENT_SP PP")
+    field (FTVL, "DOUBLE")
+
+    field (OUTM, "$(NAME):SR13QPS02_TRIM_CURRENT_SP PP")
+    field (FTVM, "DOUBLE")
+
+    field (OUTN, "$(NAME):SR14QPS02_TRIM_CURRENT_SP PP")
+    field (FTVN, "DOUBLE")
+}
+
+record (genSub, "$(NAME):FEED_FWD_03") {
+    field (SCAN, "Passive")
+    field (DESC, "3 of 6")
+    field (FLNK, "$(NAME):FEED_FWD_04")
+
+    field (INAM, "Interpolation_Table_Init")
+    field (SNAM, "Interpolation_Table_Process")
+
+    # Table file number
+    #
+    field (INPA, "$(FILE)3")
+    field (FTA,  "LONG")
+
+    # Number of dimensions
+    #
+    field (INPB, "$(DIMS)")
+    field (FTB,  "LONG")
+
+    # Number of values interpolated
+    #
+    field (INPC, "14")
+    field (FTC,  "LONG")
+
+    # Mode - absolute
+    #
+    field (INPD, "1")
+    field (FTD,  "LONG")
+
+    # Reset indicator
+    #
+    field (INPE, "$(NAME):FEED_FWD_RESET")
+    field (FTE,  "LONG")
+
+    # Input coordinates
+    #
+    field (INPI, "$(INP1)")
+    field (FTI,  "DOUBLE")
+
+    field (INPJ, "$(INP2)")
+    field (FTJ,  "DOUBLE")
+
+    field (INPK, "$(INP3)")
+    field (FTK,  "DOUBLE")
+
+    # Outputs
+    # PP mode forces the record to process as it is on same IOC.
+    # This mitigates need for an FLNK to each output.
+    #
+    field (OUTA, "$(NAME):SR01QPS03_TRIM_CURRENT_SP PP")
+    field (FTVA, "DOUBLE")
+
+    field (OUTB, "$(NAME):SR02QPS03_TRIM_CURRENT_SP PP")
+    field (FTVB, "DOUBLE")
+
+    field (OUTC, "$(NAME):SR03QPS03_TRIM_CURRENT_SP PP")
+    field (FTVC, "DOUBLE")
+
+    field (OUTD, "$(NAME):SR04QPS03_TRIM_CURRENT_SP PP")
+    field (FTVD, "DOUBLE")
+
+    field (OUTE, "$(NAME):SR05QPS03_TRIM_CURRENT_SP PP")
+    field (FTVE, "DOUBLE")
+
+    field (OUTF, "$(NAME):SR06QPS03_TRIM_CURRENT_SP PP")
+    field (FTVF, "DOUBLE")
+
+    field (OUTG, "$(NAME):SR07QPS03_TRIM_CURRENT_SP PP")
+    field (FTVG, "DOUBLE")
+
+    field (OUTH, "$(NAME):SR08QPS03_TRIM_CURRENT_SP PP")
+    field (FTVH, "DOUBLE")
+
+    field (OUTI, "$(NAME):SR09QPS03_TRIM_CURRENT_SP PP")
+    field (FTVI, "DOUBLE")
+
+    field (OUTJ, "$(NAME):SR10QPS03_TRIM_CURRENT_SP PP")
+    field (FTVJ, "DOUBLE")
+
+    field (OUTK, "$(NAME):SR11QPS03_TRIM_CURRENT_SP PP")
+    field (FTVK, "DOUBLE")
+
+    field (OUTL, "$(NAME):SR12QPS03_TRIM_CURRENT_SP PP")
+    field (FTVL, "DOUBLE")
+
+    field (OUTM, "$(NAME):SR13QPS03_TRIM_CURRENT_SP PP")
+    field (FTVM, "DOUBLE")
+
+    field (OUTN, "$(NAME):SR14QPS03_TRIM_CURRENT_SP PP")
+    field (FTVN, "DOUBLE")
+}
+
+record (genSub, "$(NAME):FEED_FWD_04") {
+    field (SCAN, "Passive")
+    field (DESC, "4 of 6")
+    field (FLNK, "$(NAME):FEED_FWD_05")
+
+    field (INAM, "Interpolation_Table_Init")
+    field (SNAM, "Interpolation_Table_Process")
+
+    # Table file number
+    #
+    field (INPA, "$(FILE)4")
+    field (FTA,  "LONG")
+
+    # Number of dimensions
+    #
+    field (INPB, "$(DIMS)")
+    field (FTB,  "LONG")
+
+    # Number of values interpolated
+    #
+    field (INPC, "14")
+    field (FTC,  "LONG")
+
+    # Mode - absolute
+    #
+    field (INPD, "1")
+    field (FTD,  "LONG")
+
+    # Reset indicator
+    #
+    field (INPE, "$(NAME):FEED_FWD_RESET")
+    field (FTE,  "LONG")
+
+    # Input coordinates
+    #
+    field (INPI, "$(INP1)")
+    field (FTI,  "DOUBLE")
+
+    field (INPJ, "$(INP2)")
+    field (FTJ,  "DOUBLE")
+
+    field (INPK, "$(INP3)")
+    field (FTK,  "DOUBLE")
+
+    # Outputs
+    # PP mode forces the record to process as it is on same IOC.
+    # This mitigates need for an FLNK to each output.
+    #
+    field (OUTA, "$(NAME):SR01QPS04_TRIM_CURRENT_SP PP")
+    field (FTVA, "DOUBLE")
+
+    field (OUTB, "$(NAME):SR02QPS04_TRIM_CURRENT_SP PP")
+    field (FTVB, "DOUBLE")
+
+    field (OUTC, "$(NAME):SR03QPS04_TRIM_CURRENT_SP PP")
+    field (FTVC, "DOUBLE")
+
+    field (OUTD, "$(NAME):SR04QPS04_TRIM_CURRENT_SP PP")
+    field (FTVD, "DOUBLE")
+
+    field (OUTE, "$(NAME):SR05QPS04_TRIM_CURRENT_SP PP")
+    field (FTVE, "DOUBLE")
+
+    field (OUTF, "$(NAME):SR06QPS04_TRIM_CURRENT_SP PP")
+    field (FTVF, "DOUBLE")
+
+    field (OUTG, "$(NAME):SR07QPS04_TRIM_CURRENT_SP PP")
+    field (FTVG, "DOUBLE")
+
+    field (OUTH, "$(NAME):SR08QPS04_TRIM_CURRENT_SP PP")
+    field (FTVH, "DOUBLE")
+
+    field (OUTI, "$(NAME):SR09QPS04_TRIM_CURRENT_SP PP")
+    field (FTVI, "DOUBLE")
+
+    field (OUTJ, "$(NAME):SR10QPS04_TRIM_CURRENT_SP PP")
+    field (FTVJ, "DOUBLE")
+
+    field (OUTK, "$(NAME):SR11QPS04_TRIM_CURRENT_SP PP")
+    field (FTVK, "DOUBLE")
+
+    field (OUTL, "$(NAME):SR12QPS04_TRIM_CURRENT_SP PP")
+    field (FTVL, "DOUBLE")
+
+    field (OUTM, "$(NAME):SR13QPS04_TRIM_CURRENT_SP PP")
+    field (FTVM, "DOUBLE")
+
+    field (OUTN, "$(NAME):SR14QPS04_TRIM_CURRENT_SP PP")
+    field (FTVN, "DOUBLE")
+}
+
+record (genSub, "$(NAME):FEED_FWD_05") {
+    field (SCAN, "Passive")
+    field (DESC, "5 of 6")
+    field (FLNK, "$(NAME):FEED_FWD_06")
+
+    field (INAM, "Interpolation_Table_Init")
+    field (SNAM, "Interpolation_Table_Process")
+
+    # Table file number
+    #
+    field (INPA, "$(FILE)5")
+    field (FTA,  "LONG")
+
+    # Number of dimensions
+    #
+    field (INPB, "$(DIMS)")
+    field (FTB,  "LONG")
+
+    # Number of values interpolated
+    #
+    field (INPC, "14")
+    field (FTC,  "LONG")
+
+    # Mode - absolute
+    #
+    field (INPD, "1")
+    field (FTD,  "LONG")
+
+    # Reset indicator
+    #
+    field (INPE, "$(NAME):FEED_FWD_RESET")
+    field (FTE,  "LONG")
+
+    # Input coordinates
+    #
+    field (INPI, "$(INP1)")
+    field (FTI,  "DOUBLE")
+
+    field (INPJ, "$(INP2)")
+    field (FTJ,  "DOUBLE")
+
+    field (INPK, "$(INP3)")
+    field (FTK,  "DOUBLE")
+
+    # Outputs
+    # PP mode forces the record to process as it is on same IOC.
+    # This mitigates need for an FLNK to each output.
+    #
+    field (OUTA, "$(NAME):SR01QPS05_TRIM_CURRENT_SP PP")
+    field (FTVA, "DOUBLE")
+
+    field (OUTB, "$(NAME):SR02QPS05_TRIM_CURRENT_SP PP")
+    field (FTVB, "DOUBLE")
+
+    field (OUTC, "$(NAME):SR03QPS05_TRIM_CURRENT_SP PP")
+    field (FTVC, "DOUBLE")
+
+    field (OUTD, "$(NAME):SR04QPS05_TRIM_CURRENT_SP PP")
+    field (FTVD, "DOUBLE")
+
+    field (OUTE, "$(NAME):SR05QPS05_TRIM_CURRENT_SP PP")
+    field (FTVE, "DOUBLE")
+
+    field (OUTF, "$(NAME):SR06QPS05_TRIM_CURRENT_SP PP")
+    field (FTVF, "DOUBLE")
+
+    field (OUTG, "$(NAME):SR07QPS05_TRIM_CURRENT_SP PP")
+    field (FTVG, "DOUBLE")
+
+    field (OUTH, "$(NAME):SR08QPS05_TRIM_CURRENT_SP PP")
+    field (FTVH, "DOUBLE")
+
+    field (OUTI, "$(NAME):SR09QPS05_TRIM_CURRENT_SP PP")
+    field (FTVI, "DOUBLE")
+
+    field (OUTJ, "$(NAME):SR10QPS05_TRIM_CURRENT_SP PP")
+    field (FTVJ, "DOUBLE")
+
+    field (OUTK, "$(NAME):SR11QPS05_TRIM_CURRENT_SP PP")
+    field (FTVK, "DOUBLE")
+
+    field (OUTL, "$(NAME):SR12QPS05_TRIM_CURRENT_SP PP")
+    field (FTVL, "DOUBLE")
+
+    field (OUTM, "$(NAME):SR13QPS05_TRIM_CURRENT_SP PP")
+    field (FTVM, "DOUBLE")
+
+    field (OUTN, "$(NAME):SR14QPS05_TRIM_CURRENT_SP PP")
+    field (FTVN, "DOUBLE")
+}
+
+record (genSub, "$(NAME):FEED_FWD_06") {
+    field (SCAN, "Passive")
+    field (DESC, "6 of 6")
+    field (FLNK, "$(NAME):FEED_FWD_EPILOGUE")
+
+    field (INAM, "Interpolation_Table_Init")
+    field (SNAM, "Interpolation_Table_Process")
+
+    # Table file number
+    #
+    field (INPA, "$(FILE)6")
+    field (FTA,  "LONG")
+
+    # Number of dimensions
+    #
+    field (INPB, "$(DIMS)")
+    field (FTB,  "LONG")
+
+    # Number of values interpolated
+    #
+    field (INPC, "14")
+    field (FTC,  "LONG")
+
+    # Mode - absolute
+    #
+    field (INPD, "1")
+    field (FTD,  "LONG")
+
+    # Reset indicator
+    #
+    field (INPE, "$(NAME):FEED_FWD_RESET")
+    field (FTE,  "LONG")
+
+    # Input coordinates
+    #
+    field (INPI, "$(INP1)")
+    field (FTI,  "DOUBLE")
+
+    field (INPJ, "$(INP2)")
+    field (FTJ,  "DOUBLE")
+
+    field (INPK, "$(INP3)")
+    field (FTK,  "DOUBLE")
+
+    # Outputs
+    # PP mode forces the record to process as it is on same IOC.
+    # This mitigates need for an FLNK to each output.
+    #
+    field (OUTA, "$(NAME):SR01QPS06_TRIM_CURRENT_SP PP")
+    field (FTVA, "DOUBLE")
+
+    field (OUTB, "$(NAME):SR02QPS06_TRIM_CURRENT_SP PP")
+    field (FTVB, "DOUBLE")
+
+    field (OUTC, "$(NAME):SR03QPS06_TRIM_CURRENT_SP PP")
+    field (FTVC, "DOUBLE")
+
+    field (OUTD, "$(NAME):SR04QPS06_TRIM_CURRENT_SP PP")
+    field (FTVD, "DOUBLE")
+
+    field (OUTE, "$(NAME):SR05QPS06_TRIM_CURRENT_SP PP")
+    field (FTVE, "DOUBLE")
+
+    field (OUTF, "$(NAME):SR06QPS06_TRIM_CURRENT_SP PP")
+    field (FTVF, "DOUBLE")
+
+    field (OUTG, "$(NAME):SR07QPS06_TRIM_CURRENT_SP PP")
+    field (FTVG, "DOUBLE")
+
+    field (OUTH, "$(NAME):SR08QPS06_TRIM_CURRENT_SP PP")
+    field (FTVH, "DOUBLE")
+
+    field (OUTI, "$(NAME):SR09QPS06_TRIM_CURRENT_SP PP")
+    field (FTVI, "DOUBLE")
+
+    field (OUTJ, "$(NAME):SR10QPS06_TRIM_CURRENT_SP PP")
+    field (FTVJ, "DOUBLE")
+
+    field (OUTK, "$(NAME):SR11QPS06_TRIM_CURRENT_SP PP")
+    field (FTVK, "DOUBLE")
+
+    field (OUTL, "$(NAME):SR12QPS06_TRIM_CURRENT_SP PP")
+    field (FTVL, "DOUBLE")
+
+    field (OUTM, "$(NAME):SR13QPS06_TRIM_CURRENT_SP PP")
+    field (FTVM, "DOUBLE")
+
+    field (OUTN, "$(NAME):SR14QPS06_TRIM_CURRENT_SP PP")
+    field (FTVN, "DOUBLE")
+}
+
+# This record clears the reset PV, and FLNKs to any
+# specified 'extrnal' PV.
+#
+record (calcout, "$(NAME):FEED_FWD_EPILOGUE") {
+    field (DESC, "Clears reset flag")
+    field (SCAN, "Passive")
+    field (OCAL, "0")
+    field (OOPT, "Every Time")
+    field (DOPT, "Use OCAL")
+    field (OUT,  "$(NAME):FEED_FWD_RESET")
+    field (FLNK, "$(FLNK)")
+}
+
+# end

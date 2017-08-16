@@ -1,0 +1,11 @@
+O.*
+bin
+db
+dbd
+include
+lib
+CVS
+build*.log
+
+
+

@@ -1,0 +1,247 @@
+# $File: //ASP/Dev/SBS/4_Controls/4_4_Equipment_Control/4_4_8_Insertion_Device_Control/sw/Feed_Forward/Feed_Forward_CommonApp/Db/Quadrupole_Zero_Trim_Current.template $
+# $Revision: 1.1.1.1 $
+# $DateTime: 2012/02/15 17:10:10 $
+# Last checked in by: $Author: saa $
+#
+# Description.
+# This template allows the quadrupole manget trim currents associated with
+# a specific insertion device to be zeroised. The template also disables the
+# lattice compensation.
+#
+# Formal parameters
+# NAME - Feed forward name, e.g. SR05FF01  (associated with SR05ID01)
+#
+# Copyright (c) 2012  Australian Synchrotron
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# Licence as published by the Free Software Foundation; either
+# version 2.1 of the Licence, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public Licence for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# Licence along with this library; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Contact details:
+# andrew.starritt@synchrotron.org.au
+# 800 Blackburn Road, Clayton, Victoria 3168, Australia.
+#
+
+
+# There zero-ising of the 84 (14 sectors by 6 quadrupoles) trim current
+# PVs is achieved using a hierachy of dfanout records. The root node of
+# this dfanout tree processes when the (gui) client writes to the .PROC
+# field to the $(NAME):ZERO_TRIM_CURRENTS_CMD record.
+#
+# This record also disables the associated feed forward functionality.
+#
+#
+# Level 1 - LNKs nodes 1 .. 2
+#
+record (dfanout, "$(NAME):ZERO_TRIM_CURRENTS_CMD") {
+    field (DESC, "Level 1")
+    field (SCAN, "Passive")
+    field (SELM, "All")
+    field (DOL,  "0.0")        # Both Disable and Zero
+    field (OMSL, "closed_loop")
+    field (OUTA, "$(NAME):FEED_FWD_ENABLE_CMD PP")
+    field (OUTB, "$(NAME):ZERO_TRIM_CURRENT_DFANOUT_1 PP")
+    field (OUTC, "$(NAME):ZERO_TRIM_CURRENT_DFANOUT_2 PP")
+}
+
+# Level 2 - LNKs nodes 11 .. 21
+#
+record (dfanout, "$(NAME):ZERO_TRIM_CURRENT_DFANOUT_1") {
+    field (DESC, "Level 2")
+    field (SCAN, "Passive")
+    field (SELM, "All")
+    field (OMSL, "supervisory")
+    field (OUTA, "$(NAME):ZERO_TRIM_CURRENT_DFANOUT_11 PP")
+    field (OUTB, "$(NAME):ZERO_TRIM_CURRENT_DFANOUT_12 PP")
+    field (OUTC, "$(NAME):ZERO_TRIM_CURRENT_DFANOUT_13 PP")
+    field (OUTD, "$(NAME):ZERO_TRIM_CURRENT_DFANOUT_14 PP")
+    field (OUTE, "$(NAME):ZERO_TRIM_CURRENT_DFANOUT_15 PP")
+    field (OUTF, "$(NAME):ZERO_TRIM_CURRENT_DFANOUT_16 PP")
+    field (OUTG, "$(NAME):ZERO_TRIM_CURRENT_DFANOUT_17 PP")
+    field (OUTH, "$(NAME):ZERO_TRIM_CURRENT_DFANOUT_18 PP")
+}
+
+record (dfanout, "$(NAME):ZERO_TRIM_CURRENT_DFANOUT_2") {
+    field (DESC, "Level 2")
+    field (SCAN, "Passive")
+    field (SELM, "All")
+    field (OMSL, "supervisory")
+    field (OUTA, "$(NAME):ZERO_TRIM_CURRENT_DFANOUT_19 PP")
+    field (OUTB, "$(NAME):ZERO_TRIM_CURRENT_DFANOUT_20 PP")
+    field (OUTC, "$(NAME):ZERO_TRIM_CURRENT_DFANOUT_21 PP")
+}
+
+# Level 3 - LNKs leafs (1 .. 14) by (1 .. 6)
+#
+record (dfanout, "$(NAME):ZERO_TRIM_CURRENT_DFANOUT_11") {
+    field (DESC, "Level 3")
+    field (SCAN, "Passive")
+    field (SELM, "All")
+    field (OMSL, "supervisory")
+    field (OUTA, "$(NAME):SR01QPS01_TRIM_CURRENT_SP PP")
+    field (OUTB, "$(NAME):SR01QPS02_TRIM_CURRENT_SP PP")
+    field (OUTC, "$(NAME):SR01QPS03_TRIM_CURRENT_SP PP")
+    field (OUTD, "$(NAME):SR01QPS04_TRIM_CURRENT_SP PP")
+    field (OUTE, "$(NAME):SR01QPS05_TRIM_CURRENT_SP PP")
+    field (OUTF, "$(NAME):SR01QPS06_TRIM_CURRENT_SP PP")
+    field (OUTG, "$(NAME):SR02QPS01_TRIM_CURRENT_SP PP")
+    field (OUTH, "$(NAME):SR02QPS02_TRIM_CURRENT_SP PP")
+}
+
+record (dfanout, "$(NAME):ZERO_TRIM_CURRENT_DFANOUT_12") {
+    field (DESC, "Level 3")
+    field (SCAN, "Passive")
+    field (SELM, "All")
+    field (OMSL, "supervisory")
+    field (OUTA, "$(NAME):SR02QPS03_TRIM_CURRENT_SP PP")
+    field (OUTB, "$(NAME):SR02QPS04_TRIM_CURRENT_SP PP")
+    field (OUTC, "$(NAME):SR02QPS05_TRIM_CURRENT_SP PP")
+    field (OUTD, "$(NAME):SR02QPS06_TRIM_CURRENT_SP PP")
+    field (OUTE, "$(NAME):SR03QPS01_TRIM_CURRENT_SP PP")
+    field (OUTF, "$(NAME):SR03QPS02_TRIM_CURRENT_SP PP")
+    field (OUTG, "$(NAME):SR03QPS03_TRIM_CURRENT_SP PP")
+    field (OUTH, "$(NAME):SR03QPS04_TRIM_CURRENT_SP PP")
+}
+
+record (dfanout, "$(NAME):ZERO_TRIM_CURRENT_DFANOUT_13") {
+    field (DESC, "Level 3")
+    field (SCAN, "Passive")
+    field (SELM, "All")
+    field (OMSL, "supervisory")
+    field (OUTA, "$(NAME):SR03QPS05_TRIM_CURRENT_SP PP")
+    field (OUTB, "$(NAME):SR03QPS06_TRIM_CURRENT_SP PP")
+    field (OUTC, "$(NAME):SR04QPS01_TRIM_CURRENT_SP PP")
+    field (OUTD, "$(NAME):SR04QPS02_TRIM_CURRENT_SP PP")
+    field (OUTE, "$(NAME):SR04QPS03_TRIM_CURRENT_SP PP")
+    field (OUTF, "$(NAME):SR04QPS04_TRIM_CURRENT_SP PP")
+    field (OUTG, "$(NAME):SR04QPS05_TRIM_CURRENT_SP PP")
+    field (OUTH, "$(NAME):SR04QPS06_TRIM_CURRENT_SP PP")
+}
+
+record (dfanout, "$(NAME):ZERO_TRIM_CURRENT_DFANOUT_14") {
+    field (DESC, "Level 3")
+    field (SCAN, "Passive")
+    field (SELM, "All")
+    field (OMSL, "supervisory")
+    field (OUTA, "$(NAME):SR05QPS01_TRIM_CURRENT_SP PP")
+    field (OUTB, "$(NAME):SR05QPS02_TRIM_CURRENT_SP PP")
+    field (OUTC, "$(NAME):SR05QPS03_TRIM_CURRENT_SP PP")
+    field (OUTD, "$(NAME):SR05QPS04_TRIM_CURRENT_SP PP")
+    field (OUTE, "$(NAME):SR05QPS05_TRIM_CURRENT_SP PP")
+    field (OUTF, "$(NAME):SR05QPS06_TRIM_CURRENT_SP PP")
+    field (OUTG, "$(NAME):SR06QPS01_TRIM_CURRENT_SP PP")
+    field (OUTH, "$(NAME):SR06QPS02_TRIM_CURRENT_SP PP")
+}
+
+record (dfanout, "$(NAME):ZERO_TRIM_CURRENT_DFANOUT_15") {
+    field (DESC, "Level 3")
+    field (SCAN, "Passive")
+    field (SELM, "All")
+    field (OMSL, "supervisory")
+    field (OUTA, "$(NAME):SR06QPS03_TRIM_CURRENT_SP PP")
+    field (OUTB, "$(NAME):SR06QPS04_TRIM_CURRENT_SP PP")
+    field (OUTC, "$(NAME):SR06QPS05_TRIM_CURRENT_SP PP")
+    field (OUTD, "$(NAME):SR06QPS06_TRIM_CURRENT_SP PP")
+    field (OUTE, "$(NAME):SR07QPS01_TRIM_CURRENT_SP PP")
+    field (OUTF, "$(NAME):SR07QPS02_TRIM_CURRENT_SP PP")
+    field (OUTG, "$(NAME):SR07QPS03_TRIM_CURRENT_SP PP")
+    field (OUTH, "$(NAME):SR07QPS04_TRIM_CURRENT_SP PP")
+}
+
+record (dfanout, "$(NAME):ZERO_TRIM_CURRENT_DFANOUT_16") {
+    field (DESC, "Level 3")
+    field (SCAN, "Passive")
+    field (SELM, "All")
+    field (OMSL, "supervisory")
+    field (OUTA, "$(NAME):SR07QPS05_TRIM_CURRENT_SP PP")
+    field (OUTB, "$(NAME):SR07QPS06_TRIM_CURRENT_SP PP")
+    field (OUTC, "$(NAME):SR08QPS01_TRIM_CURRENT_SP PP")
+    field (OUTD, "$(NAME):SR08QPS02_TRIM_CURRENT_SP PP")
+    field (OUTE, "$(NAME):SR08QPS03_TRIM_CURRENT_SP PP")
+    field (OUTF, "$(NAME):SR08QPS04_TRIM_CURRENT_SP PP")
+    field (OUTG, "$(NAME):SR08QPS05_TRIM_CURRENT_SP PP")
+    field (OUTH, "$(NAME):SR08QPS06_TRIM_CURRENT_SP PP")
+}
+
+record (dfanout, "$(NAME):ZERO_TRIM_CURRENT_DFANOUT_17") {
+    field (DESC, "Level 3")
+    field (SCAN, "Passive")
+    field (SELM, "All")
+    field (OMSL, "supervisory")
+    field (OUTA, "$(NAME):SR09QPS01_TRIM_CURRENT_SP PP")
+    field (OUTB, "$(NAME):SR09QPS02_TRIM_CURRENT_SP PP")
+    field (OUTC, "$(NAME):SR09QPS03_TRIM_CURRENT_SP PP")
+    field (OUTD, "$(NAME):SR09QPS04_TRIM_CURRENT_SP PP")
+    field (OUTE, "$(NAME):SR09QPS05_TRIM_CURRENT_SP PP")
+    field (OUTF, "$(NAME):SR09QPS06_TRIM_CURRENT_SP PP")
+    field (OUTG, "$(NAME):SR10QPS01_TRIM_CURRENT_SP PP")
+    field (OUTH, "$(NAME):SR10QPS02_TRIM_CURRENT_SP PP")
+}
+
+record (dfanout, "$(NAME):ZERO_TRIM_CURRENT_DFANOUT_18") {
+    field (DESC, "Level 3")
+    field (SCAN, "Passive")
+    field (SELM, "All")
+    field (OMSL, "supervisory")
+    field (OUTA, "$(NAME):SR10QPS03_TRIM_CURRENT_SP PP")
+    field (OUTB, "$(NAME):SR10QPS04_TRIM_CURRENT_SP PP")
+    field (OUTC, "$(NAME):SR10QPS05_TRIM_CURRENT_SP PP")
+    field (OUTD, "$(NAME):SR10QPS06_TRIM_CURRENT_SP PP")
+    field (OUTE, "$(NAME):SR11QPS01_TRIM_CURRENT_SP PP")
+    field (OUTF, "$(NAME):SR11QPS02_TRIM_CURRENT_SP PP")
+    field (OUTG, "$(NAME):SR11QPS03_TRIM_CURRENT_SP PP")
+    field (OUTH, "$(NAME):SR11QPS04_TRIM_CURRENT_SP PP")
+}
+
+record (dfanout, "$(NAME):ZERO_TRIM_CURRENT_DFANOUT_19") {
+    field (DESC, "Level 3")
+    field (SCAN, "Passive")
+    field (SELM, "All")
+    field (OMSL, "supervisory")
+    field (OUTA, "$(NAME):SR11QPS05_TRIM_CURRENT_SP PP")
+    field (OUTB, "$(NAME):SR11QPS06_TRIM_CURRENT_SP PP")
+    field (OUTC, "$(NAME):SR12QPS01_TRIM_CURRENT_SP PP")
+    field (OUTD, "$(NAME):SR12QPS02_TRIM_CURRENT_SP PP")
+    field (OUTE, "$(NAME):SR12QPS03_TRIM_CURRENT_SP PP")
+    field (OUTF, "$(NAME):SR12QPS04_TRIM_CURRENT_SP PP")
+    field (OUTG, "$(NAME):SR12QPS05_TRIM_CURRENT_SP PP")
+    field (OUTH, "$(NAME):SR12QPS06_TRIM_CURRENT_SP PP")
+}
+
+record (dfanout, "$(NAME):ZERO_TRIM_CURRENT_DFANOUT_20") {
+    field (DESC, "Level 3")
+    field (SCAN, "Passive")
+    field (SELM, "All")
+    field (OMSL, "supervisory")
+    field (OUTA, "$(NAME):SR13QPS01_TRIM_CURRENT_SP PP")
+    field (OUTB, "$(NAME):SR13QPS02_TRIM_CURRENT_SP PP")
+    field (OUTC, "$(NAME):SR13QPS03_TRIM_CURRENT_SP PP")
+    field (OUTD, "$(NAME):SR13QPS04_TRIM_CURRENT_SP PP")
+    field (OUTE, "$(NAME):SR13QPS05_TRIM_CURRENT_SP PP")
+    field (OUTF, "$(NAME):SR13QPS06_TRIM_CURRENT_SP PP")
+    field (OUTG, "$(NAME):SR14QPS01_TRIM_CURRENT_SP PP")
+    field (OUTH, "$(NAME):SR14QPS02_TRIM_CURRENT_SP PP")
+}
+
+record (dfanout, "$(NAME):ZERO_TRIM_CURRENT_DFANOUT_21") {
+    field (DESC, "Level 3")
+    field (SCAN, "Passive")
+    field (SELM, "All")
+    field (OMSL, "supervisory")
+    field (OUTA, "$(NAME):SR14QPS03_TRIM_CURRENT_SP PP")
+    field (OUTB, "$(NAME):SR14QPS04_TRIM_CURRENT_SP PP")
+    field (OUTC, "$(NAME):SR14QPS05_TRIM_CURRENT_SP PP")
+    field (OUTD, "$(NAME):SR14QPS06_TRIM_CURRENT_SP PP")
+}
+
+# end

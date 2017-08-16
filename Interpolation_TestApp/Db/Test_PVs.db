@@ -1,0 +1,28 @@
+#
+#
+
+record (calc, "SR12ID01:GAP_MONITOR") {
+   field (SCAN, ".5 second")
+   field (INPA, "SR12ID01:GAP_MONITOR")
+   field (CALC, "A>=190?22:A+2.3")
+}
+
+record (calc, "SR14ID01MCS01:PHASE_MODE_MONITOR") {
+   field (SCAN, "10 second")
+   field (INPA, "SR14ID01:PHASE_MODE_MONITOR")
+   field (CALC, "A>=4?0:A+1")
+}
+
+record (calc, "SR14ID01:GAP_MONITOR") {
+   field (SCAN, "1 second")
+   field (INPA, "SR14ID01:GAP_MONITOR")
+   field (CALC, "A>=150?30:A+3.1")
+}
+
+record (calc, "SR14ID01:PHASE_MONITOR") {
+   field (SCAN, ".5 second")
+   field (INPA, "SR14ID01:PHASE_MONITOR")
+   field (CALC, "A>=30?-30:A+1.5")
+}
+
+# end

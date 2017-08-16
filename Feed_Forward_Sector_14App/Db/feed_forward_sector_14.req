@@ -1,0 +1,9 @@
+# $File: //ASP/Dev/SBS/4_Controls/4_4_Equipment_Control/4_4_8_Insertion_Device_Control/sw/Feed_Forward/Feed_Forward_Sector_14App/Db/feed_forward_sector_14.req $
+# $Revision: 1.1.1.1 $
+# $DateTime: 2012/06/07 10:30:50 $
+# Last checked in by: $Author: saa $
+#
+
+file feed_forward_sector_autosave_template.req   SECTOR=14
+
+# end

@@ -1,0 +1,29 @@
+# $File: //ASP/Dev/SBS/4_Controls/4_4_Equipment_Control/4_4_8_Insertion_Device_Control/sw/Feed_Forward/Feed_Forward_CommonApp/Db/feed_forward_sector_autosave_template.req $
+# $Revision: 1.1.1.1 $
+# $DateTime: 2012/06/07 10:30:50 $
+# Last checked in by: $Author: saa $
+#
+# Defines auto save PVs associated with a single ID.
+#
+SR$(SECTOR)FF01:FEED_FWD_ENABLE_CMD
+
+SR$(SECTOR)FF01:INP1_COORDINATE_SET
+SR$(SECTOR)FF01:INP2_COORDINATE_SET
+SR$(SECTOR)FF01:INP3_COORDINATE_SET
+
+file feed_forward_source_target_autosave_template.req  SOURCE=$(SECTOR), TARGET=01
+file feed_forward_source_target_autosave_template.req  SOURCE=$(SECTOR), TARGET=02
+file feed_forward_source_target_autosave_template.req  SOURCE=$(SECTOR), TARGET=03
+file feed_forward_source_target_autosave_template.req  SOURCE=$(SECTOR), TARGET=04
+file feed_forward_source_target_autosave_template.req  SOURCE=$(SECTOR), TARGET=05
+file feed_forward_source_target_autosave_template.req  SOURCE=$(SECTOR), TARGET=06
+file feed_forward_source_target_autosave_template.req  SOURCE=$(SECTOR), TARGET=07
+file feed_forward_source_target_autosave_template.req  SOURCE=$(SECTOR), TARGET=08
+file feed_forward_source_target_autosave_template.req  SOURCE=$(SECTOR), TARGET=09
+file feed_forward_source_target_autosave_template.req  SOURCE=$(SECTOR), TARGET=10
+file feed_forward_source_target_autosave_template.req  SOURCE=$(SECTOR), TARGET=11
+file feed_forward_source_target_autosave_template.req  SOURCE=$(SECTOR), TARGET=12
+file feed_forward_source_target_autosave_template.req  SOURCE=$(SECTOR), TARGET=13
+file feed_forward_source_target_autosave_template.req  SOURCE=$(SECTOR), TARGET=14
+
+# end
