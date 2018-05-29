@@ -8,7 +8,13 @@
 # each time EPICS_BASE, SNCSEQ, or any other external
 # module defined in the RELEASE file is rebuilt.
 
-TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
+# The rest of this file is LCLS only and can be removed.
+# =============================================================
+# All needed variables come in via the following include:
+# =============================================================
+#include $(TOP)/RELEASE_SITE
+
+# TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
 
 # If you don't want to install into $(TOP) then
 # define INSTALL_LOCATION_APP here
