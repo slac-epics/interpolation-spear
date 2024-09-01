@@ -1,5 +1,9 @@
 # file: RELEASE_NOTES
 
+R1.1.0  S. Condamoor 31-Aug-2024
+    Branch epics-7-sdf
+    Build with base 7.0.3.1-1.0 and sdf. 
+
 R0.0.1-0.0.2:  S. Condamoor 15-Jul-20199
     Build with base 3.15.5-1.1
 	
